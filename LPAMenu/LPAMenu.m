@@ -110,6 +110,9 @@ typedef void(^LPAMenuButtonAnimationFinished)(BOOL finished);
                 [self.window setHidden:YES];
                 [[[[UIApplication sharedApplication] delegate] window] makeKeyAndVisible];
                 [[UIApplication sharedApplication] endIgnoringInteractionEvents];
+                if (self.delegate && [self.delegate respondsToSelector:@selector(lpaMenuDidDismiss:)]) {
+                    [self.delegate lpaMenuDidDismiss:self];
+                }
             }
         }];
     }
@@ -119,6 +122,11 @@ typedef void(^LPAMenuButtonAnimationFinished)(BOOL finished);
 
 - (void)__menuButtonHandler:(UIButton *)button
 {
+    // Delegate
+    if (self.delegate && [self.delegate respondsToSelector:@selector(lpaMenu:didSelectedAtIndex:)]) {
+        [self.delegate lpaMenu:self didSelectedAtIndex:button.tag];
+    }
+    // 
     LPAMenuItem *menuItem = [self.items objectAtIndex:button.tag];
     if (menuItem.subItem.count) {
         [self __removeCategoryButtons:^(BOOL finished){
@@ -225,33 +233,6 @@ typedef void(^LPAMenuButtonAnimationFinished)(BOOL finished);
             }
         }];
     }];
-    
-//    __block NSInteger removedCount = 0;
-//    [_itemViews enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop){
-//        __block UIView *contentView = (UIView *)obj;
-//        CGRect contentViewRect = contentView.frame;
-//        contentViewRect.origin.y = CGRectGetHeight(self.window.frame) + CGRectGetHeight(contentViewRect);
-//        
-//        NSString *animationKeyName = [NSString stringWithFormat:@"CatogoryAnimation_%ld", (long)idx];
-//        POPSpringAnimation *springAnimation = [POPSpringAnimation animationWithPropertyNamed:kPOPViewFrame];
-//        springAnimation.toValue = [NSValue valueWithCGRect:contentViewRect];
-//        springAnimation.springBounciness = 8;
-//        springAnimation.springSpeed = 10 + idx;
-//        springAnimation.removedOnCompletion = YES;
-//        springAnimation.completionBlock = ^(POPAnimation *anim, BOOL finished){
-//            if (finished) {
-//                [contentView removeFromSuperview];
-//                contentView = nil;
-//                removedCount++;
-//                if (removedCount == _itemViews.count / 2) {
-//                    if (block) {
-//                        block(YES);
-//                    }
-//                }
-//            }
-//        };
-//        [contentView pop_addAnimation:springAnimation forKey:animationKeyName];
-//    }];
 }
 
 #pragma mark - Custom Accessors
