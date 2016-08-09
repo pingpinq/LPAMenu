@@ -1,19 +1,86 @@
+// MIT License
 //
-//  LPAMenu.m
-//  LPAMenu-Demo
+// Copyright (c) 2016 leeping(平果太郎)
 //
-//  Created by 平果太郎 on 16/8/5.
-//  Copyright © 2016年 平果太郎. All rights reserved.
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
 //
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
 #import "LPAMenu.h"
 
-//static const CGFloat LPAMenuViewHeight = 60.0f;
 static const CGFloat LPAMenuViewAnimationDurition = 0.5f;
 static const NSUInteger LPAMenuDefaultCellMaxCount = 3;
 static const NSInteger LPAMenuMaxCount = 21;
 
 typedef void(^LPAMenuButtonAnimationFinished)(BOOL finished);
+
+// LPAMenuManager
+@interface LPAMenuManager : NSObject
+
++ (void)addLPAMenu:(LPAMenu *)menu;
++ (void)removeLPAMenu:(LPAMenu *)menu;
+
+@end
+
+@implementation LPAMenuManager
+{
+    NSMutableArray *_lpaMenus;
+}
+
+- (instancetype)init
+{
+    self = [super init];
+    if (self) {
+        _lpaMenus = [NSMutableArray array];
+    }
+    return self;
+}
+
++ (void)addLPAMenu:(LPAMenu *)menu
+{
+    static LPAMenuManager *gLPAMenuManager = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        gLPAMenuManager = [[LPAMenuManager alloc] init];
+    });
+    [gLPAMenuManager __addLPAMenu:menu];
+}
+
++ (void)removeLPAMenu:(LPAMenu *)menu
+{
+    static LPAMenuManager *gLPAMenuManager = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        gLPAMenuManager = [[LPAMenuManager alloc] init];
+    });
+    [gLPAMenuManager __removeLPAMenu:menu];
+}
+
+- (void)__addLPAMenu:(LPAMenu *)menu
+{
+    [_lpaMenus addObject:menu];
+}
+
+- (void)__removeLPAMenu:(LPAMenu *)menu
+{
+    [_lpaMenus removeObject:menu];
+}
+
+@end
 
 @interface LPAMenu ()
 
@@ -73,6 +140,7 @@ typedef void(^LPAMenuButtonAnimationFinished)(BOOL finished);
         [self.window setHidden:NO];
         [self.window makeKeyAndVisible];
         [[UIApplication sharedApplication] beginIgnoringInteractionEvents];
+        [LPAMenuManager addLPAMenu:self];
         [UIView animateWithDuration:LPAMenuViewAnimationDurition animations:^{
             [self.backgroundView setAlpha:1];
             [self.closeButton setAlpha:1];
@@ -114,6 +182,7 @@ typedef void(^LPAMenuButtonAnimationFinished)(BOOL finished);
                     [self.delegate lpaMenuDidDismiss:self];
                 }
             }
+            [LPAMenuManager removeLPAMenu:self];
         }];
     }
 }
@@ -126,7 +195,7 @@ typedef void(^LPAMenuButtonAnimationFinished)(BOOL finished);
     if (self.delegate && [self.delegate respondsToSelector:@selector(lpaMenu:didSelectedAtIndex:)]) {
         [self.delegate lpaMenu:self didSelectedAtIndex:button.tag];
     }
-    // 
+    // Handler button event
     LPAMenuItem *menuItem = [self.items objectAtIndex:button.tag];
     if (menuItem.subItem.count) {
         [self __removeCategoryButtons:^(BOOL finished){
@@ -296,6 +365,11 @@ typedef void(^LPAMenuButtonAnimationFinished)(BOOL finished);
     item.image = image;
     item.selectedBlock = handler;
     return item;
+}
+
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"%@ %@", [super description], self.title];
 }
 
 @end
