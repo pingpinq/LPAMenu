@@ -52,22 +52,24 @@ typedef void(^LPAMenuButtonAnimationFinished)(BOOL finished);
 
 + (void)addLPAMenu:(LPAMenu *)menu
 {
-    static LPAMenuManager *gLPAMenuManager = nil;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        gLPAMenuManager = [[LPAMenuManager alloc] init];
-    });
-    [gLPAMenuManager __addLPAMenu:menu];
+    [[self __instance] __addLPAMenu:menu];
 }
 
 + (void)removeLPAMenu:(LPAMenu *)menu
 {
+    [[self __instance] __removeLPAMenu:menu];
+}
+
++ (instancetype)__instance
+{
     static LPAMenuManager *gLPAMenuManager = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        gLPAMenuManager = [[LPAMenuManager alloc] init];
+        if (gLPAMenuManager == nil) {
+            gLPAMenuManager = [[LPAMenuManager alloc] init];
+        }
     });
-    [gLPAMenuManager __removeLPAMenu:menu];
+    return gLPAMenuManager;
 }
 
 - (void)__addLPAMenu:(LPAMenu *)menu
